@@ -13,7 +13,7 @@ const cors=require('cors')
 const helmet=require('helmet')
 const rateLimiter=require('express-rate-limit')
 
-app.use('trust proxy',1)
+app.set('trust proxy',1)
 app.use(rateLimiter({
     windowMs:15 * 60 *1000,//15 minutes
     max:100,
