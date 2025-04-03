@@ -64,8 +64,8 @@ const updateUser = async (req, res, next) => {
         
         const userWithoutPassword = user.toObject();
         delete userWithoutPassword.password;
-        
-        res.status(StatusCodes.OK).json({ user: userWithoutPassword });
+        const token=user.createJWT()
+        res.status(StatusCodes.OK).json({ user: userWithoutPassword ,token});
     } catch (error) {
         next(error);
     }
