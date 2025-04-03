@@ -25,26 +25,49 @@ const login=async(req,res)=>{
     res.status(StatusCodes.OK).json({user,token})
 }
 
-const updateUser=async(req,res)=>{
-    const {email,password,name,newName,newEmail,newPassword}=req.body
-    if(!email || !password){
-        throw new BadRequestError('please provide the email and password')
+const updateUser = async (req, res, next) => {
+    try {
+        const { email, name,newName, newEmail, password, newPassword } = req.body;
+        
+        const user = await User.findOne({ email });
+        if (!user) {
+            throw new BadRequestError('User not found');
+        }
+
+        // Check if updating email
+        if (newEmail) {
+            if (newEmail !== email) {
+                const emailExists = await User.findOne({ email: newEmail });
+                if (emailExists) {
+                    throw new BadRequestError('Email already in use');
+                }
+                user.email = newEmail;
+            }
+        }
+
+        // Password update logic
+        if (newPassword) {
+            if (!password) {
+                throw new BadRequestError('Current password is required to set a new password');
+            }
+            
+            const isPasswordCorrect = await user.comparePassword(password);
+            if (!isPasswordCorrect) {
+                throw new BadRequestError('Current password is incorrect');
+            }
+            user.password = newPassword;
+        }
+
+        if (newName) user.name = newName;
+        
+        await user.save(); // Save all changes
+        
+        const userWithoutPassword = user.toObject();
+        delete userWithoutPassword.password;
+        
+        res.status(StatusCodes.OK).json({ user: userWithoutPassword });
+    } catch (error) {
+        next(error);
     }
-    const user=await User.findOne({email})
-    if(!user){
-        throw new BadRequestError('incorrect  email ')
-    }
-    const isPasswordEqual=await user.comparePassword(password)
-    if(!isPasswordEqual){
-        throw new BadRequestError('incorrect  password')
-    }
-    if(newEmail)user.email=newEmail
-    if(newName)user.name=newName
-    if(newPassword){
-        const salt=await bcrypt.genSalt(10)
-        user.password=await bcrypt.hash(newPassword,salt)
-    }
-    await user.save()
-    res.status(StatusCodes.OK).json({user})
-}
+};
 module.exports={register,login,updateUser}
