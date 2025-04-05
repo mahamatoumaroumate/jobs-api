@@ -17,7 +17,7 @@ const {sort,search,status}=req.query
        queryObject.status=status
    }
    let result= Job.find(queryObject)
-   let length=(await result).length
+   
    if(sort){
     if(sort==='a-z'){
         result=result.sort({company:1})
@@ -33,6 +33,7 @@ const {sort,search,status}=req.query
 
     }
 }
+const length=(await result).length
 const page=Number(req.query.page)||1
 const limit=Number(req.query.limit)||12
 const skip=(page-1)*limit
