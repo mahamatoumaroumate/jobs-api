@@ -10,23 +10,27 @@ const createJob=async(req,res)=>{
 const getAllJobs=async(req,res)=>{
 let queryObject={}
 queryObject.createdBy=req.user.userId
-const {sort,search,status,position,query}=req.query
+const {sort,search,status}=req.query
    if(search){
       queryObject.company={$regex:search,$options:'i'}
-   }if(status){
+   }if(status && status!=='all'){
        queryObject.status=status
    }
-   if(position){
-       queryObject.position=position
-   }
-  
    let result= Job.find(queryObject)
    if(sort){
-    const sortList=sort.split(',').join(' ')
-    result=result.sort(sortList)
-    
-}else{
-    result=result.sort('createdAt')
+    if(sort==='a-z'){
+        result=result.sort({company:1})
+    }else if(sort==='z-a'){
+        result=result.sort({company:-1})
+
+    }else if(sort==='latest'){
+        result=result.sort({createdAt:-1})
+
+    }
+    else{
+        result=result.sort({createdAt:1})
+
+    }
 }
 const page=Number(req.query.page)||1
 const limit=Number(req.query.limit)||12
