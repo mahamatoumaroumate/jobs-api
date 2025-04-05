@@ -17,6 +17,7 @@ const {sort,search,status}=req.query
        queryObject.status=status
    }
    let result= Job.find(queryObject)
+   let length=(await result).length
    if(sort){
     if(sort==='a-z'){
         result=result.sort({company:1})
@@ -38,7 +39,7 @@ const skip=(page-1)*limit
 result=result.skip(skip).limit(limit)
 const jobs=await result
 
-    res.status(StatusCodes.OK).json({jobs,length:jobs.length})
+    res.status(StatusCodes.OK).json({jobs,length})
 }
 const getJob=async(req,res)=>{
     const{user:{userId:createdBy},params:{id:jobId}}=req
