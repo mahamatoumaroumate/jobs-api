@@ -10,9 +10,9 @@ const createJob=async(req,res)=>{
 const getAllJobs=async(req,res)=>{
 let queryObject={}
 queryObject.createdBy=req.user.userId
-const {sort,company,status,position,query}=req.query
-   if(company){
-      queryObject.company={$regex:company,$options:'i'}
+const {sort,search,status,position,query}=req.query
+   if(search){
+      queryObject.company={$regex:search,$options:'i'}
    }if(status){
        queryObject.status=status
    }
