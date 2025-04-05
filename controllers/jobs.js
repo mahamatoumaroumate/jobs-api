@@ -12,7 +12,7 @@ let queryObject={}
 queryObject.createdBy=req.user.userId
 const {sort,search,status}=req.query
    if(search){
-      queryObject.company={$regex:search,$options:'i'}
+      queryObject.position={$regex:search,$options:'i'}
    }if(status && status!=='all'){
        queryObject.status=status
    }
