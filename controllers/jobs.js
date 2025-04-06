@@ -8,24 +8,20 @@ const createJob=async(req,res)=>{
     res.status(StatusCodes.CREATED).json({job})
 }
 const getAllJobs = async (req, res) => {
+  try {
     let queryObject = { createdBy: req.user.userId };
     const { sort, search, status } = req.query;
-  
-    // Build the query
+
     if (search) {
       queryObject.position = { $regex: search, $options: 'i' };
     }
     if (status && status !== 'all') {
       queryObject.status = status;
     }
-  
-    // First get the total count of matching jobs (without pagination)
+
     const totalJobs = await Job.countDocuments(queryObject);
-  
-    // Then get the paginated results
     let result = Job.find(queryObject);
-  
-    // Apply sorting
+
     if (sort) {
       switch (sort) {
         case 'a-z':
@@ -41,21 +37,24 @@ const getAllJobs = async (req, res) => {
           result = result.sort({ createdAt: 1 });
       }
     }
-  
-    // Apply pagination
+
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 12;
     const skip = (page - 1) * limit;
-    
+
     result = result.skip(skip).limit(limit);
     const jobs = await result;
-  
-    res.status(StatusCodes.OK).json({ 
-      jobs, 
-      totalJobs, // Total count of all matching documents
-      numOfPages: Math.ceil(totalJobs / limit) // Total number of pages
+
+    res.status(200).json({
+      jobs,
+      totalJobs,
+      numOfPages: Math.ceil(totalJobs / limit)
     });
-  };
+  } catch (error) {
+    console.error("ERROR in getAllJobs:", error);
+    res.status(500).json({ msg: "Server Error", error: error.message });
+  }
+};
 const getJob=async(req,res)=>{
     const{user:{userId:createdBy},params:{id:jobId}}=req
     const job=await Job.findOne({createdBy,_id:jobId})
