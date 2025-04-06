@@ -9,52 +9,57 @@ const createJob=async(req,res)=>{
 }
 const getAllJobs = async (req, res) => {
   try {
-    let queryObject = { createdBy: req.user.userId };
-    const { sort, search, status } = req.query;
+    const { sort, search, status, page = 1, limit = 12 } = req.query;
+
+    const queryObject = {
+      createdBy: req.user.userId,
+    };
 
     if (search) {
       queryObject.position = { $regex: search, $options: 'i' };
     }
+
     if (status && status !== 'all') {
       queryObject.status = status;
     }
 
     const totalJobs = await Job.countDocuments(queryObject);
-    let result = Job.find(queryObject);
 
-    if (sort) {
-      switch (sort) {
-        case 'a-z':
-          result = result.sort({ company: 1 });
-          break;
-        case 'z-a':
-          result = result.sort({ company: -1 });
-          break;
-        case 'latest':
-          result = result.sort({ createdAt: -1 });
-          break;
-        default:
-          result = result.sort({ createdAt: 1 });
-      }
+    let mongoQuery = Job.find(queryObject); // only build here
+
+    // Sort
+    switch (sort) {
+      case 'a-z':
+        mongoQuery = mongoQuery.sort({ company: 1 });
+        break;
+      case 'z-a':
+        mongoQuery = mongoQuery.sort({ company: -1 });
+        break;
+      case 'latest':
+        mongoQuery = mongoQuery.sort({ createdAt: -1 });
+        break;
+      default:
+        mongoQuery = mongoQuery.sort({ createdAt: 1 });
     }
 
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 12;
-    const skip = (page - 1) * limit;
+    // Pagination
+    const skip = (Number(page) - 1) * Number(limit);
+    mongoQuery = mongoQuery.skip(skip).limit(Number(limit));
 
-    result = result.skip(skip).limit(limit);
-    const jobs = await result;
+    // ✅ Execute query only once
+    const jobs = await mongoQuery;
 
     res.status(200).json({
       jobs,
       totalJobs,
-      numOfPages: Math.ceil(totalJobs / limit)
+      numOfPages: Math.ceil(totalJobs / limit),
     });
   } catch (error) {
-    console.error("ERROR in getAllJobs:", error);
-    res.status(500).json({ msg: "Server Error", error: error.message });
+    console.error("🔥 Backend error in getAllJobs:", error);
+    res.status(500).json({ msg: error.message });
   }
 };
+
 const getJob=async(req,res)=>{
     const{user:{userId:createdBy},params:{id:jobId}}=req
     const job=await Job.findOne({createdBy,_id:jobId})
