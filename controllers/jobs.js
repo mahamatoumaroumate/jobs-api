@@ -59,7 +59,10 @@ const getAllJobs = async (req, res) => {
     res.status(500).json({ msg: error.message });
   }
 };
-
+const getJobsStats=async(req,res)=>{
+const jobs=await Job.find({createdBy:req.user.userId})
+res.status(StatusCodes.OK).json({jobs})
+}
 const getJob=async(req,res)=>{
     const{user:{userId:createdBy},params:{id:jobId}}=req
     const job=await Job.findOne({createdBy,_id:jobId})
@@ -79,4 +82,4 @@ const deleteJob=async(req,res)=>{
     const job=await Job.findByIdAndDelete({createdBy,_id:jobId})
     res.status(StatusCodes.OK).json(job)
 }
-module.exports={createJob,deleteJob,getAllJobs,getJob,updateJob}
+module.exports={createJob,deleteJob,getAllJobs,getJob,updateJob,getJobsStats}
