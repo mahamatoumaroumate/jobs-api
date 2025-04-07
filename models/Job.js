@@ -12,6 +12,12 @@ const jobSchema=new mongoose.Schema({
         minlength:3,
         maxlength:100
     },
+    location:{
+        type:String,
+        required:[true,'please provide the location value'],
+        minlength:3,
+        maxlength:100
+    },
     status:{
         type:String,
         enum:['pending','declined','interview'],
